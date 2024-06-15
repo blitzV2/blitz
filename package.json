@@ -1,0 +1,22 @@
+{
+  "name": "discord-bot-app",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "bin": {
+    "discord-bot-app": "./index.js"
+  },
+  "pkg": {
+    "scripts": "index.js",
+    "assets": [
+      "index.html"
+    ]
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "discord.js": "^13.0.1",
+    "body-parser": "^1.19.0",
+    "path": "^0.12.7"
+  }
+}
