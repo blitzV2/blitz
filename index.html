@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Controller</title>
+    <style>
+        body {
+            background-color: #2C2F33;
+            color: #FFFFFF;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            flex-direction: column;
+        }
+        h1 {
+            color: #7289DA;
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-align: center;
+        }
+        form {
+            background-color: #23272A;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #B9BBBE;
+        }
+        input {
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #7289DA;
+            border-radius: 5px;
+            background-color: #2C2F33;
+            color: #FFFFFF;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            margin-bottom: 10px;
+        }
+        input:focus {
+            border-color: #7289DA;
+        }
+        input::placeholder {
+            color: #99AAB5;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #7289DA;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:disabled {
+            background-color: #4E5D94;
+            cursor: not-allowed;
+        }
+        button:hover:enabled {
+            background-color: #677BC4;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        pre {
+            background-color: #2C2F33;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 400px;
+            width: 100%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            box-sizing: border-box;
+            color: #B9BBBE;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+    <script>
+        async function startBot() {
+            const token = document.getElementById('token').value;
+            const guildId = document.getElementById('guildId').value;
+            const message = document.getElementById('message').value;
+
+            const response = await fetch('/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token, guildId, message })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('startButton').disabled = true;
+                    document.getElementById('stopButton').disabled = false;
+                    startLogStream();
+                }
+            }
+        }
+
+        async function stopBot() {
+            const response = await fetch('/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('startButton').disabled = false;
+                    document.getElementById('stopButton').disabled = true;
+                    stopLogStream();
+                }
+            }
+        }
+
+        let eventSource;
+
+        function startLogStream() {
+            const logOutput = document.getElementById('output');
+            eventSource = new EventSource('/logs');
+
+            eventSource.onmessage = function(event) {
+                logOutput.textContent += event.data + '\n';
+                logOutput.scrollTop = logOutput.scrollHeight;
+            };
+        }
+
+        function stopLogStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Discord Bot Controller</h1>
+    <form onsubmit="event.preventDefault(); startBot();">
+        <label for="token">Discord Bot Token:</label>
+        <input type="text" id="token" name="token" placeholder="Enter your bot token" required>
+        <label for="guildId">Guild ID:</label>
+        <input type="text" id="guildId" name="guildId" placeholder="Enter the guild ID" required>
+        <label for="message">Message to Send:</label>
+        <input type="text" id="message" name="message" placeholder="Enter the message" required>
+        <div class="button-group">
+            <button type="submit" id="startButton">Start Bot</button>
+            <button type="button" id="stopButton" onclick="stopBot()" disabled>Stop Bot</button>
+        </div>
+    </form>
+    <pre id="output"></pre>
+</body>
+</html>
